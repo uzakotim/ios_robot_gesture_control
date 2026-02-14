@@ -47,10 +47,16 @@ class CameraManager: NSObject, ObservableObject {
                 captureSession.addOutput(videoOutput)
             }
             
-            videoOutput.connection(with: .video)?.videoOrientation = .landscapeRight
             if let connection = videoOutput.connection(with: .video) {
-                if connection.isVideoOrientationSupported {
-                    connection.videoOrientation = .landscapeRight
+                if #available(iOS 17.0, *) {
+                    // 90 degrees corresponds to landscapeRight rotation
+                    if connection.isVideoRotationAngleSupported(0) {
+                        connection.videoRotationAngle = 0
+                    }
+                } else {
+                    if connection.isVideoOrientationSupported {
+                        connection.videoOrientation = .landscapeRight
+                    }
                 }
                 
                 if connection.isVideoMirroringSupported {

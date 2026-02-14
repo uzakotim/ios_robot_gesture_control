@@ -35,9 +35,18 @@ class PreviewView: UIView {
         
         videoPreviewLayer.frame = bounds
         
-        if let connection = videoPreviewLayer.connection,
-           connection.isVideoOrientationSupported {
-            connection.videoOrientation = .landscapeRight
+        if let connection = videoPreviewLayer.connection {
+            if #available(iOS 17.0, *) {
+                // Rotate to landscapeRight: 90 degrees clockwise from portrait
+                if connection.isVideoRotationAngleSupported(180) {
+                    connection.videoRotationAngle = 180
+                }
+            } else {
+                if connection.isVideoOrientationSupported {
+                    connection.videoOrientation = .landscapeRight
+                }
+            }
         }
     }
 }
+
