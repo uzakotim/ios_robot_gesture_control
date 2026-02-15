@@ -78,6 +78,15 @@ class CameraManager: NSObject, ObservableObject {
 
         print("Detected hand:", handedness)
 
+        // ===== Publish normalized landmarks for UI overlay (x,y in 0..1) =====
+        let normalizedPoints: [CGPoint] = hand.map { pt in
+            CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
+        }
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.currentLandmarks = normalizedPoints
+        }
+        
         // ===== POSITION =====
         let meanX = hand.map { $0.x }.reduce(0, +) / Float(hand.count)
         let correctedX = 1.0 - meanX   // because front camera is mirrored
