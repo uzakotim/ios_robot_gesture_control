@@ -64,17 +64,22 @@ class CameraManager: NSObject, ObservableObject {
     private func handleLandmarkerResult(_ result: HandLandmarkerResult) {
 
         guard let hand = result.landmarks.first else {
-            currentLandmarks = []
-            currentCommand = "x 0"
-            sendCommandIfChanged("x 0")   // stop if no hand
+            DispatchQueue.main.async { [weak self] in
+                self?.currentLandmarks = []
+                self?.currentCommand = "k 0"
+            }
+            sendCommandIfChanged("k 0")   // stop if no hand
             return
         }
 
         // Publish normalized landmarks for UI overlay (x,y in 0..1)
         let normalizedPoints: [CGPoint] = hand.map { pt in
-            CGPoint(x: CGFloat(pt.x), y: CGFloat(pt.y))
+            CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
         }
-        currentLandmarks = normalizedPoints
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.currentLandmarks = normalizedPoints
+        }
 
         // LANDMARKS ARE NORMALIZED (0–1)
         let meanX = hand.map { $0.x }.reduce(0, +) / Float(hand.count)
@@ -130,7 +135,9 @@ class CameraManager: NSObject, ObservableObject {
             command = "k 0"
         }
 
-        currentCommand = command
+        DispatchQueue.main.async { [weak self] in
+            self?.currentCommand = command
+        }
 
 //        sendCommandIfChanged(command)
     }

@@ -73,7 +73,7 @@ class PreviewView: UIView {
             // Convert normalized coordinates to view space
             let x = p.x * w
             let y = p.y * h
-            let circleRect = CGRect(x: x - 3, y: y - 3, width: 6, height: 6)
+            let circleRect = CGRect(x: x-3, y: y-3, width: 6, height: 6)
             path.append(UIBezierPath(ovalIn: circleRect))
         }
         landmarksLayer.path = path.cgPath
