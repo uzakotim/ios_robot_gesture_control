@@ -8,19 +8,145 @@
 import AVFoundation
 import SwiftUI
 import Combine
+import MediaPipeTasksVision
+import simd
+import Network
+
 
 @MainActor
 class CameraManager: NSObject, ObservableObject {
     
     var captureSession = AVCaptureSession()
     private var videoOutput = AVCaptureVideoDataOutput()
+    
+    @Published var currentCommand: String = ""
+    @Published var currentLandmarks: [CGPoint] = []
+    
+    private var handLandmarker: HandLandmarker?
+    private var lastCommand: String = ""
+    private var isProcessingFrame = false
+
+    private var udpConnection: NWConnection?
+
 
     
     override init() {
         super.init()
         setupCamera()
+        setupHandLandmarker()
     }
-    
+    func setupHandLandmarker() {
+        do {
+            let options = HandLandmarkerOptions()
+            options.baseOptions.modelAssetPath = Bundle.main.path(
+                forResource: "hand_landmarker",
+                ofType: "task"
+            )!
+            options.runningMode = .video
+            options.numHands = 1
+            options.minHandDetectionConfidence = 0.2
+            options.minHandPresenceConfidence = 0.2
+            options.minTrackingConfidence = 0.2
+
+            handLandmarker = try HandLandmarker(options: options)
+        } catch {
+            print("Failed to create HandLandmarker: \(error)")
+        }
+    }
+    func setupUDP(host: String, port: UInt16) {
+        udpConnection = NWConnection(
+            host: NWEndpoint.Host(host),
+            port: NWEndpoint.Port(rawValue: port)!,
+            using: .udp
+        )
+        udpConnection?.start(queue: .global())
+    }
+    private func handleLandmarkerResult(_ result: HandLandmarkerResult) {
+
+        guard let hand = result.landmarks.first else {
+            currentLandmarks = []
+            currentCommand = "x 0"
+            sendCommandIfChanged("x 0")   // stop if no hand
+            return
+        }
+
+        // Publish normalized landmarks for UI overlay (x,y in 0..1)
+        let normalizedPoints: [CGPoint] = hand.map { pt in
+            CGPoint(x: CGFloat(pt.x), y: CGFloat(pt.y))
+        }
+        currentLandmarks = normalizedPoints
+
+        // LANDMARKS ARE NORMALIZED (0–1)
+        let meanX = hand.map { $0.x }.reduce(0, +) / Float(hand.count)
+        let correctedX = 1.0 - meanX
+
+        let position: String
+        if correctedX < 0.33 {
+            position = "LEFT"
+        } else if correctedX < 0.66 {
+            position = "MIDDLE"
+        } else {
+            position = "RIGHT"
+        }
+
+        let wrist = hand[0]
+        let indexMCP = hand[5]
+        let pinkyMCP = hand[17]
+
+        let v1 = SIMD3<Float>(
+            indexMCP.x - wrist.x,
+            indexMCP.y - wrist.y,
+            indexMCP.z - wrist.z
+        )
+
+        let v2 = SIMD3<Float>(
+            pinkyMCP.x - wrist.x,
+            pinkyMCP.y - wrist.y,
+            pinkyMCP.z - wrist.z
+        )
+
+        let normal = simd_cross(v1, v2)
+        let orientation = normal.z < 0 ? "PALM" : "BACK"
+
+        mapGestureToCommand(position: position, orientation: orientation)
+    }
+    private func mapGestureToCommand(position: String, orientation: String) {
+
+        let command: String
+
+        if position == "LEFT" {
+            command = "e 150"
+        }
+        else if position == "RIGHT" {
+            command = "q 150"
+        }
+        else if position == "MIDDLE" && orientation == "PALM" {
+            command = "s 150"
+        }
+        else if position == "MIDDLE" && orientation == "BACK" {
+            command = "w 150"
+        }
+        else {
+            command = "k 0"
+        }
+
+        currentCommand = command
+
+//        sendCommandIfChanged(command)
+    }
+    private func sendCommandIfChanged(_ command: String) {
+
+        guard command != lastCommand else { return }
+        lastCommand = command
+
+        guard let data = command.data(using: .utf8) else { return }
+
+        udpConnection?.send(content: data, completion: .contentProcessed({ error in
+            if let error = error {
+                print("UDP send error: \(error)")
+            }
+        }))
+    }
     private func setupCamera() {
         captureSession.sessionPreset = .high
         
@@ -42,6 +168,10 @@ class CameraManager: NSObject, ObservableObject {
             // Video output (for future gesture processing)
             videoOutput.setSampleBufferDelegate(self,
                                                 queue: DispatchQueue(label: "videoQueue"))
+            videoOutput.videoSettings = [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ]
+            videoOutput.alwaysDiscardsLateVideoFrames = true
             
             if captureSession.canAddOutput(videoOutput) {
                 captureSession.addOutput(videoOutput)
@@ -76,9 +206,34 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput,
                        didOutput sampleBuffer: CMSampleBuffer,
                        from connection: AVCaptureConnection) {
-        
-        // This is where you'll process frames for gesture recognition
-        // Perfect place to integrate MediaPipe later
-        
+
+        guard let handLandmarker = handLandmarker else { return }
+
+        // Prevent overlapping inference (VERY important)
+        if isProcessingFrame { return }
+        isProcessingFrame = true
+
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            isProcessingFrame = false
+            return
+        }
+
+        let timestamp = Int(Date().timeIntervalSince1970 * 1000)
+
+        do {
+            let mpImage = try MPImage(pixelBuffer: pixelBuffer)
+            let result = try handLandmarker.detect(
+                videoFrame: mpImage,
+                timestampInMilliseconds: timestamp
+            )
+
+            handleLandmarkerResult(result)
+
+        } catch {
+            print("Detection error: \(error)")
+        }
+
+        isProcessingFrame = false
     }
 }
+
