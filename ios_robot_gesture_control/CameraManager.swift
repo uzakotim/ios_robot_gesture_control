@@ -68,22 +68,19 @@ class CameraManager: NSObject, ObservableObject {
                 self?.currentLandmarks = []
                 self?.currentCommand = "k 0"
             }
-            sendCommandIfChanged("k 0")   // stop if no hand
+            sendCommandIfChanged("k 0")
             return
         }
 
-        // Publish normalized landmarks for UI overlay (x,y in 0..1)
-        let normalizedPoints: [CGPoint] = hand.map { pt in
-            CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
-        }
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.currentLandmarks = normalizedPoints
-        }
+        // ===== HANDEDNESS (CORRECT WAY) =====
+        let handedness = result.handedness.first?.first?.categoryName ?? "Unknown"
+        let isRightHand = handedness == "Right"
 
-        // LANDMARKS ARE NORMALIZED (0–1)
+        print("Detected hand:", handedness)
+
+        // ===== POSITION =====
         let meanX = hand.map { $0.x }.reduce(0, +) / Float(hand.count)
-        let correctedX = 1.0 - meanX
+        let correctedX = 1.0 - meanX   // because front camera is mirrored
 
         let position: String
         if correctedX < 0.33 {
@@ -94,6 +91,7 @@ class CameraManager: NSObject, ObservableObject {
             position = "RIGHT"
         }
 
+        // ===== PALM / BACK (NO NEED TO FLIP BASED ON HAND) =====
         let wrist = hand[0]
         let indexMCP = hand[5]
         let pinkyMCP = hand[17]
@@ -111,7 +109,13 @@ class CameraManager: NSObject, ObservableObject {
         )
 
         let normal = simd_cross(v1, v2)
-        let orientation = normal.z < 0 ? "PALM" : "BACK"
+
+        // IMPORTANT:
+        // In MediaPipe iOS, for front camera:
+        // normal.z < 0 typically means PALM facing camera.
+        let orientation = isRightHand ? normal.z < 0 ? "PALM" : "BACK" : normal.z < 0 ? "BACK" : "PALM"
+
+        print("Position:", position, "Orientation:", orientation)
 
         mapGestureToCommand(position: position, orientation: orientation)
     }
