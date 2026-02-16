@@ -66,16 +66,28 @@ class PreviewView: UIView {
     }
     
     func updateLandmarks(_ normalizedPoints: [CGPoint]) {
+        guard let previewLayer = self.layer as? AVCaptureVideoPreviewLayer else { return }
+
         let path = UIBezierPath()
-        let w = bounds.width
-        let h = bounds.height
+
         for p in normalizedPoints {
-            // Convert normalized coordinates to view space
-            let x = p.x * w
-            let y = p.y * h
-            let circleRect = CGRect(x: x-3, y: y-3, width: 6, height: 6)
+            // 🔁 Flip Y axis
+            let flippedPoint = CGPoint(x: p.x, y: 1.0 - p.y)
+
+            let layerPoint = previewLayer.layerPointConverted(
+                fromCaptureDevicePoint: flippedPoint
+            )
+
+            let circleRect = CGRect(
+                x: layerPoint.x - 3,
+                y: layerPoint.y - 3,
+                width: 6,
+                height: 6
+            )
+
             path.append(UIBezierPath(ovalIn: circleRect))
         }
+
         landmarksLayer.path = path.cgPath
     }
     
