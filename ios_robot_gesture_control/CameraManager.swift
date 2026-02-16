@@ -34,6 +34,7 @@ class CameraManager: NSObject, ObservableObject {
         super.init()
         setupCamera()
         setupHandLandmarker()
+        setupUDP(host: "192.168.1.4", port: 8080)
     }
     func setupHandLandmarker() {
         do {
@@ -139,10 +140,10 @@ class CameraManager: NSObject, ObservableObject {
             command = "q 150"
         }
         else if position == "MIDDLE" && orientation == "PALM" {
-            command = "s 150"
+            command = "s 100"
         }
         else if position == "MIDDLE" && orientation == "BACK" {
-            command = "w 150"
+            command = "w 100"
         }
         else {
             command = "k 0"
@@ -152,7 +153,7 @@ class CameraManager: NSObject, ObservableObject {
             self?.currentCommand = command
         }
 
-//        sendCommandIfChanged(command)
+        sendCommandIfChanged(command)
     }
     private func sendCommandIfChanged(_ command: String) {
 
