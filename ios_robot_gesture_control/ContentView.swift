@@ -13,8 +13,16 @@ struct ContentView: View {
     
     var body: some View {
         ZStack {
-            CameraPreview(cameraManager: cameraManager)
-                .ignoresSafeArea()
-        }
+                  
+                  // Camera layer (bottom)
+                  CameraPreview(cameraManager: cameraManager)
+                      .ignoresSafeArea()
+                      .opacity(0.5)
+                  
+                  // Robot face overlay (top)
+                  RobotEyesOverlay(cameraManager: cameraManager)
+                      .ignoresSafeArea()
+                      .opacity(0.9)
+              }
     }
 }

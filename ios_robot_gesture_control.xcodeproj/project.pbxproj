@@ -20,8 +20,6 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C80005D72F405E6F00F989E6 /* ios_robot_gesture_control */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = ios_robot_gesture_control;
 			sourceTree = "<group>";
 		};
@@ -45,7 +43,6 @@
 				20654A4805D9C068966F9A94 /* Pods-ios_robot_gesture_control.debug.xcconfig */,
 				47212E862D2552531234A9B4 /* Pods-ios_robot_gesture_control.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
