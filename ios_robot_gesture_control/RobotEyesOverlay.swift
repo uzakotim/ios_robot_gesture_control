@@ -13,6 +13,7 @@ struct RobotEyesOverlay: View {
     
     
     @State private var eyeOffset: CGFloat = 0
+    @State private var eyeSize: CGFloat = 200
     let horizontalOffset : CGFloat = 200
     
     var body: some View {
@@ -23,8 +24,8 @@ struct RobotEyesOverlay: View {
                 
                 HStack(spacing: geo.size.width * 0.06) {
                     
-                    RobotEye(offset: eyeOffset)
-                    RobotEye(offset: eyeOffset)
+                    RobotEye(offset: eyeOffset,eyeSize: eyeSize)
+                    RobotEye(offset: eyeOffset, eyeSize: eyeSize)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -38,9 +39,20 @@ struct RobotEyesOverlay: View {
         withAnimation(.easeInOut(duration: 0.2)) {
             if command.contains("q") {
                 eyeOffset = horizontalOffset
+                eyeSize = 200
             } else if command.contains("e") {
                 eyeOffset = -horizontalOffset
-            } else {
+                eyeSize = 200
+            } else if command.contains("w"){
+                eyeOffset = 0
+                eyeSize = 250
+            }
+            else if command.contains("s"){
+                eyeOffset = 0
+                eyeSize = 150
+            }
+            else {
+                eyeSize = 200
                 eyeOffset = 0
             }
         }

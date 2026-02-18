@@ -134,10 +134,10 @@ class CameraManager: NSObject, ObservableObject {
         let command: String
 
         if position == "LEFT" {
-            command = "e 150"
+            command = "e 170"
         }
         else if position == "RIGHT" {
-            command = "q 150"
+            command = "q 170"
         }
         else if position == "MIDDLE" && orientation == "PALM" {
             command = "s 100"
