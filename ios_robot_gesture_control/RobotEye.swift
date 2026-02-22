@@ -8,7 +8,8 @@ import SwiftUI
 
 struct RobotEye: View {
     
-    var offset: CGFloat
+    var offsetX: CGFloat
+    var offsetY: CGFloat
     var eyeSize: CGFloat
     
     var body: some View {
@@ -25,7 +26,7 @@ struct RobotEye: View {
                 )
             )
             .frame(width: eyeSize, height: eyeSize)
-            .offset(x: offset)
+            .offset(x: offsetX, y: offsetY)
             .shadow(color: .yellow.opacity(0.6), radius: 12)
     }
 }

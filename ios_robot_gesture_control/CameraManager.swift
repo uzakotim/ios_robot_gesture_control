@@ -21,6 +21,10 @@ class CameraManager: NSObject, ObservableObject {
     
     @Published var currentCommand: String = ""
     @Published var currentLandmarks: [CGPoint] = []
+    @Published var offsetX: CGFloat = 0
+    @Published var offsetY: CGFloat = 0
+    private var isInEyeControlMode = false
+    private var eyeModeStabilityCounter = 0
     
     private var handLandmarker: HandLandmarker?
     private var lastCommand: String = ""
@@ -30,7 +34,6 @@ class CameraManager: NSObject, ObservableObject {
     var soundEngine = RobotSoundEngine()
     private var lastSoundTime = Date()
 
-    private var frameCounter = 0
     
     override init() {
         super.init()
@@ -71,6 +74,8 @@ class CameraManager: NSObject, ObservableObject {
             DispatchQueue.main.async { [weak self] in
 //                self?.currentLandmarks = []
                 self?.currentCommand = "k 0"
+                self?.offsetX = 0
+                self?.offsetY = 0
             }
             sendCommandIfChanged("k 0")
             return
@@ -83,9 +88,9 @@ class CameraManager: NSObject, ObservableObject {
         print("Detected hand:", handedness)
 
         // ===== Publish normalized landmarks for UI overlay (x,y in 0..1) =====
-        let normalizedPoints: [CGPoint] = hand.map { pt in
-            CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
-        }
+//        let normalizedPoints: [CGPoint] = hand.map { pt in
+//            CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
+//        }
         
 //        DispatchQueue.main.async { [weak self] in
 //            self?.currentLandmarks = normalizedPoints
@@ -128,7 +133,90 @@ class CameraManager: NSObject, ObservableObject {
         // normal.z < 0 typically means PALM facing camera.
         let orientation = isRightHand ? normal.z < 0 ? "PALM" : "BACK" : normal.z < 0 ? "BACK" : "PALM"
 
-        print("Position:", position, "Orientation:", orientation)
+        // =========================================================
+        // 👆 INDEX FINGER DETECTION (ROBUST VERSION)
+        // =========================================================
+
+        let indexTip = hand[8]
+        let indexPIP = hand[6]
+        let middleTip = hand[12]
+        let middlePIP = hand[10]
+        let ringTip = hand[16]
+        let ringPIP = hand[14]
+        let pinkyTip = hand[20]
+        let pinkyPIP = hand[18]
+
+        func distance(_ a: NormalizedLandmark, _ b: NormalizedLandmark) -> Float {
+            let dx = a.x - b.x
+            let dy = a.y - b.y
+            let dz = a.z - b.z
+            return sqrt(dx*dx + dy*dy + dz*dz)
+        }
+
+        // Extended if tip is farther from wrist than PIP
+        let indexExtended  = distance(indexTip, wrist)  > distance(indexPIP, wrist)
+        let middleExtended = distance(middleTip, wrist) > distance(middlePIP, wrist)
+        let ringExtended   = distance(ringTip, wrist)   > distance(ringPIP, wrist)
+        let pinkyExtended  = distance(pinkyTip, wrist)  > distance(pinkyPIP, wrist)
+
+        // Only index up
+        let onlyIndexShown = indexExtended &&
+                             !middleExtended &&
+                             !ringExtended &&
+                             !pinkyExtended
+
+        print("Index:", indexExtended,
+              "Middle:", middleExtended,
+              "Ring:", ringExtended,
+              "Pinky:", pinkyExtended)
+
+        // =========================================================
+        // 👀 EYE CONTROL MODE (WITH STABILITY LOCK)
+        // =========================================================
+
+        let eyeGestureDetected = onlyIndexShown && orientation == "PALM"
+
+        // Require gesture to be stable for a few frames
+        if eyeGestureDetected {
+            eyeModeStabilityCounter += 1
+        } else {
+            eyeModeStabilityCounter -= 1
+        }
+
+        // Clamp counter
+        eyeModeStabilityCounter = max(0, min(eyeModeStabilityCounter, 5))
+
+        // Enter eye mode after 3 stable frames
+        if eyeModeStabilityCounter >= 3 {
+            isInEyeControlMode = true
+        }
+
+        // Exit eye mode only when gesture clearly gone
+        if eyeModeStabilityCounter == 0 {
+            isInEyeControlMode = false
+        }
+
+        if isInEyeControlMode {
+
+            let correctedX = 1.0 - indexTip.x
+            let correctedY = 1.0 - indexTip.y
+
+            DispatchQueue.main.async { [weak self] in
+                self?.offsetX = CGFloat(correctedX - 0.5)
+                self?.offsetY = CGFloat(correctedY - 0.5)
+            }
+
+            return
+        }
+        // =========================================================
+        // 🎮 MOVEMENT MODE (ALL OTHER GESTURES)
+        // =========================================================
+
+        DispatchQueue.main.async { [weak self] in
+            self?.offsetX = 0
+            self?.offsetY = 0
+        }
+//        print("Position:", position, "Orientation:", orientation)
 
         mapGestureToCommand(position: position, orientation: orientation)
     }
@@ -251,11 +339,6 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
                        from connection: AVCaptureConnection) {
 
         guard let handLandmarker = handLandmarker else { return }
-
-        frameCounter += 1
-        if frameCounter % 7 != 0 {   // process every 7th frame
-            return
-        }
 
         // Prevent overlapping inference (VERY important)
         if isProcessingFrame { return }
