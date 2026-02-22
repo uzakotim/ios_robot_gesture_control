@@ -17,7 +17,7 @@ struct ContentView: View {
                   // Camera layer (bottom)
                   CameraPreview(cameraManager: cameraManager)
                       .ignoresSafeArea()
-                      .opacity(0.3)
+                      .opacity(0.7)
                   
                   // Robot face overlay (top)
                   RobotEyesOverlay(cameraManager: cameraManager)

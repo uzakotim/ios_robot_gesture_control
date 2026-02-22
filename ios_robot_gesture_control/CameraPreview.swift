@@ -50,13 +50,13 @@ class PreviewView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        addSubview(commandLabel)
+//        addSubview(commandLabel)
         self.layer.addSublayer(landmarksLayer)
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        addSubview(commandLabel)
+//        addSubview(commandLabel)
         self.layer.addSublayer(landmarksLayer)
     }
     
