@@ -36,24 +36,27 @@ struct RobotEyesOverlay: View {
     }
     
     private func updateEyes(for command: String) {
+        // take the first char from command
+        let firstChar = command.first ?? " "
         withAnimation(.easeInOut(duration: 0.2)) {
-            if command.contains("q") {
-                eyeOffset = horizontalOffset
-                eyeSize = 200
-            } else if command.contains("e") {
-                eyeOffset = -horizontalOffset
-                eyeSize = 200
-            } else if command.contains("w"){
-                eyeOffset = 0
-                eyeSize = 250
-            }
-            else if command.contains("s"){
-                eyeOffset = 0
-                eyeSize = 150
-            }
-            else {
-                eyeSize = 200
-                eyeOffset = 0
+            switch firstChar
+            {
+                case "q":
+                    eyeOffset = horizontalOffset
+                    eyeSize = 200
+                case "e":
+                    eyeOffset = -horizontalOffset
+                    eyeSize = 200
+                case "w":
+                    eyeOffset = 0
+                    eyeSize = 225
+                case "s":
+                    eyeOffset = 0
+                    eyeSize = 175
+                default:
+                    eyeSize = 200
+                    eyeOffset = 0
+                
             }
         }
     }
