@@ -40,11 +40,48 @@ class RobotSoundEngine {
             print("Audio engine start error: \(error)")
         }
     }
-
     func playChirp(startFreq: Double,
-                   endFreq: Double,
-                   duration: Double,
-                   volume: Float = 0.3) {
+                    endFreq: Double,
+                    duration: Double,
+                    volume: Float = 0.3) {
+         guard let format = outputFormat else { return }
+
+         let sampleRate = format.sampleRate
+         let channels = Int(format.channelCount)
+         let frameCount = AVAudioFrameCount(sampleRate * duration)
+
+         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
+         buffer.frameLength = frameCount
+
+         // Generate a mono chirp, then duplicate to all channels to match the output format
+         let monoSamplesCount = Int(frameCount)
+         var mono = [Float](repeating: 0, count: monoSamplesCount)
+         for i in 0..<monoSamplesCount {
+             let progress = Double(i) / Double(monoSamplesCount)
+             let freq = startFreq + (endFreq - startFreq) * progress
+             let theta = 2.0 * Double.pi * freq * Double(i) / sampleRate
+             mono[i] = Float(sin(theta)) * volume
+         }
+
+         if let channelData = buffer.floatChannelData {
+             for ch in 0..<channels {
+                 let dst = channelData[ch]
+                 mono.withUnsafeBufferPointer { src in
+                     dst.assign(from: src.baseAddress!, count: monoSamplesCount)
+                 }
+             }
+         }
+
+         if !player.isPlaying {
+             player.play()
+         }
+         player.scheduleBuffer(buffer, at: nil, options: [])
+     }
+
+    func playChipChirp(startFreq: Double,
+                       endFreq: Double,
+                       duration: Double,
+                       volume: Float = 0.3) {
         guard let format = outputFormat else { return }
 
         let sampleRate = format.sampleRate
@@ -54,21 +91,45 @@ class RobotSoundEngine {
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else { return }
         buffer.frameLength = frameCount
 
-        // Generate a mono chirp, then duplicate to all channels to match the output format
-        let monoSamplesCount = Int(frameCount)
-        var mono = [Float](repeating: 0, count: monoSamplesCount)
-        for i in 0..<monoSamplesCount {
-            let progress = Double(i) / Double(monoSamplesCount)
+        let sampleCount = Int(frameCount)
+        var mono = [Float](repeating: 0, count: sampleCount)
+
+        let steps = 8  // fewer steps = more robotic stepping
+        let stepSize = sampleCount / steps
+
+        for i in 0..<sampleCount {
+            let stepIndex = i / stepSize
+            let progress = Double(stepIndex) / Double(steps)
             let freq = startFreq + (endFreq - startFreq) * progress
+
             let theta = 2.0 * Double.pi * freq * Double(i) / sampleRate
-            mono[i] = Float(sin(theta)) * volume
+            
+            // Square wave instead of sine
+            let raw = sin(theta)
+            var sample: Float = raw >= 0 ? 1.0 : -1.0
+            
+            // Simple envelope (fast attack & decay)
+            let attack = Int(0.02 * Double(sampleCount))
+            let decay = Int(0.15 * Double(sampleCount))
+            
+            if i < attack {
+                sample *= Float(i) / Float(attack)
+            } else if i > sampleCount - decay {
+                sample *= Float(sampleCount - i) / Float(decay)
+            }
+
+            // Bit crush effect (8-bit feel)
+            let crushLevel: Float = 16
+            sample = round(sample * crushLevel) / crushLevel
+            
+            mono[i] = sample * volume
         }
 
         if let channelData = buffer.floatChannelData {
             for ch in 0..<channels {
                 let dst = channelData[ch]
                 mono.withUnsafeBufferPointer { src in
-                    dst.assign(from: src.baseAddress!, count: monoSamplesCount)
+                    dst.assign(from: src.baseAddress!, count: sampleCount)
                 }
             }
         }
@@ -76,6 +137,7 @@ class RobotSoundEngine {
         if !player.isPlaying {
             player.play()
         }
+
         player.scheduleBuffer(buffer, at: nil, options: [])
     }
 }
