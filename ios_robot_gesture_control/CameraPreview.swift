@@ -20,7 +20,7 @@ struct CameraPreview: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIView, context: Context) {
         guard let preview = uiView as? PreviewView else { return }
-        preview.updateCommand(cameraManager.currentCommand)
+//        preview.updateCommand(cameraManager.currentCommand)
 //        preview.updateLandmarks(cameraManager.currentLandmarks)
     }
 }
