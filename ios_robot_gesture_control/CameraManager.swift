@@ -256,13 +256,13 @@ class CameraManager: NSObject, ObservableObject {
             return;
         }
         if command.contains("w"){
-            self.soundEngine.playChipChirp(startFreq: 500, endFreq: 1200, duration: 0.20)
+            self.soundEngine.playChirp(startFreq: 500, endFreq: 900, duration: 0.20)
         }
         else if command.contains("s"){
-            self.soundEngine.playChipChirp(startFreq: 800, endFreq: 1200, duration: 0.10)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                self.soundEngine.playChipChirp(startFreq: 900, endFreq: 500, duration: 0.12)
-            }
+                    self.soundEngine.playChirp(startFreq: 700, endFreq: 900, duration: 0.10)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.soundEngine.playChirp(startFreq: 900, endFreq: 500, duration: 0.12)
+                    }
         }
         else if command.contains("q"){
             self.soundEngine.playChirp(startFreq: 700, endFreq: 500, duration: 0.15)
@@ -270,7 +270,6 @@ class CameraManager: NSObject, ObservableObject {
         else if command.contains("e"){
             self.soundEngine.playChirp(startFreq: 500, endFreq: 700, duration: 0.15)
         }
-
 
         guard let data = command.data(using: .utf8) else { return }
 
