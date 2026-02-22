@@ -21,7 +21,7 @@ struct CameraPreview: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         guard let preview = uiView as? PreviewView else { return }
         preview.updateCommand(cameraManager.currentCommand)
-        preview.updateLandmarks(cameraManager.currentLandmarks)
+//        preview.updateLandmarks(cameraManager.currentLandmarks)
     }
 }
 
@@ -65,31 +65,31 @@ class PreviewView: UIView {
         setNeedsLayout()
     }
     
-    func updateLandmarks(_ normalizedPoints: [CGPoint]) {
-        guard let previewLayer = self.layer as? AVCaptureVideoPreviewLayer else { return }
-
-        let path = UIBezierPath()
-
-        for p in normalizedPoints {
-            // 🔁 Flip Y axis
-            let flippedPoint = CGPoint(x: p.x, y: 1.0 - p.y)
-
-            let layerPoint = previewLayer.layerPointConverted(
-                fromCaptureDevicePoint: flippedPoint
-            )
-
-            let circleRect = CGRect(
-                x: layerPoint.x - 3,
-                y: layerPoint.y - 3,
-                width: 6,
-                height: 6
-            )
-
-            path.append(UIBezierPath(ovalIn: circleRect))
-        }
-
-        landmarksLayer.path = path.cgPath
-    }
+//    func updateLandmarks(_ normalizedPoints: [CGPoint]) {
+//        guard let previewLayer = self.layer as? AVCaptureVideoPreviewLayer else { return }
+//
+//        let path = UIBezierPath()
+//
+//        for p in normalizedPoints {
+//            // 🔁 Flip Y axis
+//            let flippedPoint = CGPoint(x: p.x, y: 1.0 - p.y)
+//
+//            let layerPoint = previewLayer.layerPointConverted(
+//                fromCaptureDevicePoint: flippedPoint
+//            )
+//
+//            let circleRect = CGRect(
+//                x: layerPoint.x - 3,
+//                y: layerPoint.y - 3,
+//                width: 6,
+//                height: 6
+//            )
+//
+//            path.append(UIBezierPath(ovalIn: circleRect))
+//        }
+//
+//        landmarksLayer.path = path.cgPath
+//    }
     
     override class var layerClass: AnyClass {
         AVCaptureVideoPreviewLayer.self
@@ -103,7 +103,7 @@ class PreviewView: UIView {
         super.layoutSubviews()
         
         videoPreviewLayer.frame = bounds
-        landmarksLayer.frame = bounds
+//        landmarksLayer.frame = bounds
         
         if let connection = videoPreviewLayer.connection {
             if #available(iOS 17.0, *) {
