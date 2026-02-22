@@ -28,8 +28,9 @@ class CameraManager: NSObject, ObservableObject {
 
     private var udpConnection: NWConnection?
     var soundEngine = RobotSoundEngine()
+    private var lastSoundTime = Date()
 
-
+    private var frameCounter = 0
     
     override init() {
         super.init()
@@ -40,15 +41,16 @@ class CameraManager: NSObject, ObservableObject {
     func setupHandLandmarker() {
         do {
             let options = HandLandmarkerOptions()
+            options.baseOptions.delegate = .CPU
             options.baseOptions.modelAssetPath = Bundle.main.path(
                 forResource: "hand_landmarker",
                 ofType: "task"
             )!
             options.runningMode = .video
             options.numHands = 1
-            options.minHandDetectionConfidence = 0.2
-            options.minHandPresenceConfidence = 0.2
-            options.minTrackingConfidence = 0.2
+            options.minHandDetectionConfidence = 0.5
+            options.minHandPresenceConfidence = 0.5
+            options.minTrackingConfidence = 0.5
 
             handLandmarker = try HandLandmarker(options: options)
         } catch {
@@ -67,7 +69,7 @@ class CameraManager: NSObject, ObservableObject {
 
         guard let hand = result.landmarks.first else {
             DispatchQueue.main.async { [weak self] in
-                self?.currentLandmarks = []
+//                self?.currentLandmarks = []
                 self?.currentCommand = "k 0"
             }
             sendCommandIfChanged("k 0")
@@ -85,9 +87,9 @@ class CameraManager: NSObject, ObservableObject {
             CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
         }
         
-        DispatchQueue.main.async { [weak self] in
-            self?.currentLandmarks = normalizedPoints
-        }
+//        DispatchQueue.main.async { [weak self] in
+//            self?.currentLandmarks = normalizedPoints
+//        }
         
         // ===== POSITION =====
         let meanX = hand.map { $0.x }.reduce(0, +) / Float(hand.count)
@@ -141,10 +143,10 @@ class CameraManager: NSObject, ObservableObject {
             command = "q 170"
         }
         else if position == "MIDDLE" && orientation == "PALM" {
-            command = "s 100"
+            command = "s 150"
         }
         else if position == "MIDDLE" && orientation == "BACK" {
-            command = "w 100"
+            command = "w 150"
         }
         else {
             command = "k 0"
@@ -160,6 +162,10 @@ class CameraManager: NSObject, ObservableObject {
 
         guard command != lastCommand else { return }
         lastCommand = command
+        if Date().timeIntervalSince(lastSoundTime) < 0.2
+        {
+            return;
+        }
         if command.contains("w"){
             self.soundEngine.playChirp(startFreq: 500, endFreq: 1200, duration: 0.20)
         }
@@ -186,7 +192,7 @@ class CameraManager: NSObject, ObservableObject {
         }))
     }
     private func setupCamera() {
-        captureSession.sessionPreset = .high
+        captureSession.sessionPreset = .iFrame1280x720
         
         // Front camera
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera,
@@ -195,7 +201,6 @@ class CameraManager: NSObject, ObservableObject {
             print("Front camera not available")
             return
         }
-        
         do {
             let input = try AVCaptureDeviceInput(device: camera)
             
@@ -247,6 +252,11 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
 
         guard let handLandmarker = handLandmarker else { return }
 
+        frameCounter += 1
+        if frameCounter % 7 != 0 {   // process every 7th frame
+            return
+        }
+
         // Prevent overlapping inference (VERY important)
         if isProcessingFrame { return }
         isProcessingFrame = true
@@ -256,7 +266,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
             return
         }
 
-        let timestamp = Int(Date().timeIntervalSince1970 * 1000)
+        let timestamp = Int(CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds * 1000)
 
         do {
             let mpImage = try MPImage(pixelBuffer: pixelBuffer)
