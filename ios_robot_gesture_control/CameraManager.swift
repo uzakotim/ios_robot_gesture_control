@@ -204,8 +204,9 @@ class CameraManager: NSObject, ObservableObject {
             DispatchQueue.main.async { [weak self] in
                 self?.offsetX = CGFloat(correctedX - 0.5)
                 self?.offsetY = CGFloat(correctedY - 0.5)
+                
             }
-
+            mapGestureToCommand(position: "STOP", orientation: "PALM")
             return
         }
         // =========================================================
