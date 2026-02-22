@@ -22,7 +22,7 @@ struct RobotEyesOverlay: View {
             ZStack {
                 Color.clear
                 
-                HStack(spacing: geo.size.width * 0.06) {
+                HStack(spacing: geo.size.width * 0.05) {
                     
                     RobotEye(offset: eyeOffset,eyeSize: eyeSize)
                     RobotEye(offset: eyeOffset, eyeSize: eyeSize)
@@ -49,10 +49,10 @@ struct RobotEyesOverlay: View {
                     eyeSize = 200
                 case "w":
                     eyeOffset = 0
-                    eyeSize = 225
+                    eyeSize = 250
                 case "s":
                     eyeOffset = 0
-                    eyeSize = 175
+                    eyeSize = 150
                 default:
                     eyeSize = 200
                     eyeOffset = 0

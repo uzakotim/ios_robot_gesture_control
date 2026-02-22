@@ -17,12 +17,11 @@ struct ContentView: View {
                   // Camera layer (bottom)
                   CameraPreview(cameraManager: cameraManager)
                       .ignoresSafeArea()
-                      .opacity(0.5)
+                      .opacity(0.3)
                   
                   // Robot face overlay (top)
                   RobotEyesOverlay(cameraManager: cameraManager)
                       .ignoresSafeArea()
-                      .opacity(0.9)
               }
     }
 }
