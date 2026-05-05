@@ -25,6 +25,30 @@ struct ContentView: View {
             RobotEyesOverlay(cameraManager: cameraManager)
                 .ignoresSafeArea()
                 
+            // Language Toggle Button
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        if speechManager.currentLanguage == .english {
+                            speechManager.currentLanguage = .russian
+                        } else {
+                            speechManager.currentLanguage = .english
+                        }
+                    }) {
+                        Text(speechManager.currentLanguage.title)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.blue.opacity(0.8))
+                            .cornerRadius(20)
+                    }
+                    .padding()
+                }
+                Spacer()
+            }
+                
             // Speech Recognition Overlay
             VStack {
                 Spacer()

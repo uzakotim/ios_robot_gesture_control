@@ -3,21 +3,38 @@ import Speech
 import AVFoundation
 import Combine
 
+enum SpeechLanguage: String {
+    case english = "en-US"
+    case russian = "ru-RU"
+    
+    var title: String {
+        switch self {
+        case .english: return "English"
+        case .russian: return "Русский"
+        }
+    }
+}
+
 class SpeechRecognitionManager: ObservableObject {
     @Published var recognizedText: String = ""
     @Published var isCommandModeActive: Bool = false
     @Published var isListening: Bool = false
+    @Published var currentLanguage: SpeechLanguage = .russian {
+        didSet {
+            if isListening {
+                startListening()
+            }
+        }
+    }
     
     private let audioEngine = AVAudioEngine()
     
     private var engRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var rusRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ru-RU"))
     
-    private var engRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var rusRequest: SFSpeechAudioBufferRecognitionRequest?
-    
-    private var engTask: SFSpeechRecognitionTask?
-    private var rusTask: SFSpeechRecognitionTask?
+    private var activeRequest: SFSpeechAudioBufferRecognitionRequest?
+    private var activeTask: SFSpeechRecognitionTask?
+    private var currentTaskID: UUID?
     
     @Published var currentSpeech: String = ""
     private var llmTimer: Timer?
@@ -56,30 +73,16 @@ class SpeechRecognitionManager: ObservableObject {
             return
         }
         
-        engRequest = SFSpeechAudioBufferRecognitionRequest()
-        rusRequest = SFSpeechAudioBufferRecognitionRequest()
-        
-        guard let engReq = engRequest, let rusReq = rusRequest else { return }
-        
-        engReq.shouldReportPartialResults = true
-        rusReq.shouldReportPartialResults = true
-        
-        // Attempt on-device recognition to allow concurrent tasks if possible
-        if #available(iOS 13, *) {
-            if engRecognizer?.supportsOnDeviceRecognition == true {
-                engReq.requiresOnDeviceRecognition = true
-            }
-            if rusRecognizer?.supportsOnDeviceRecognition == true {
-                rusReq.requiresOnDeviceRecognition = true
-            }
-        }
+        activeRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let request = activeRequest else { return }
+        request.shouldReportPartialResults = true
+        request.contextualStrings = ["Byte", "Байт", "Ayte","Айт"]
         
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-            self?.engRequest?.append(buffer)
-            self?.rusRequest?.append(buffer)
+            self?.activeRequest?.append(buffer)
         }
         
         audioEngine.prepare()
@@ -94,12 +97,15 @@ class SpeechRecognitionManager: ObservableObject {
             return
         }
         
-        engTask = engRecognizer?.recognitionTask(with: engReq) { [weak self] result, error in
-            self?.handleResult(result: result, error: error, language: "EN")
-        }
+        let recognizerToUse = currentLanguage == .english ? engRecognizer : rusRecognizer
         
-        rusTask = rusRecognizer?.recognitionTask(with: rusReq) { [weak self] result, error in
-            self?.handleResult(result: result, error: error, language: "RU")
+        let taskID = UUID()
+        self.currentTaskID = taskID
+        
+        activeTask = recognizerToUse?.recognitionTask(with: request) { [weak self] result, error in
+            guard let self = self else { return }
+            guard self.currentTaskID == taskID else { return }
+            self.handleResult(result: result, error: error)
         }
         
         resetTimers()
@@ -111,16 +117,11 @@ class SpeechRecognitionManager: ObservableObject {
             audioEngine.inputNode.removeTap(onBus: 0)
         }
         
-        engRequest?.endAudio()
-        rusRequest?.endAudio()
+        activeRequest?.endAudio()
+        activeTask?.cancel()
         
-        engTask?.cancel()
-        rusTask?.cancel()
-        
-        engRequest = nil
-        rusRequest = nil
-        engTask = nil
-        rusTask = nil
+        activeRequest = nil
+        activeTask = nil
         
         llmTimer?.invalidate()
         restartTimer?.invalidate()
@@ -135,7 +136,7 @@ class SpeechRecognitionManager: ObservableObject {
         }
     }
     
-    private func handleResult(result: SFSpeechRecognitionResult?, error: Error?, language: String) {
+    private func handleResult(result: SFSpeechRecognitionResult?, error: Error?) {
         guard let result = result else { return }
         
         let text = result.bestTranscription.formattedString
@@ -145,34 +146,28 @@ class SpeechRecognitionManager: ObservableObject {
             if !text.isEmpty && self.isListening {
                 var displayText = text
                 
-                // Erase previous words from the display by taking the LAST occurrence of "byte" or "байт"
-                let byteRange = text.range(of: "byte", options: [.caseInsensitive, .backwards])
-                let baitRange = text.range(of: "байт", options: [.caseInsensitive, .backwards])
+                // Erase previous words from the display by taking the LAST occurrence of any wake word
+                let wakeWords = ["byte","бай", "байт","ayte","ay","ite", "айт"]
+                var bestRange: Range<String.Index>? = nil
                 
-                if let br = byteRange, let btr = baitRange {
-                    let bestRange = br.lowerBound > btr.lowerBound ? br : btr
-                    displayText = String(text[bestRange.lowerBound...])
-                } else if let br = byteRange {
-                    displayText = String(text[br.lowerBound...])
-                } else if let btr = baitRange {
-                    displayText = String(text[btr.lowerBound...])
+                for word in wakeWords {
+                    if let range = text.range(of: word, options: [.caseInsensitive, .backwards]) {
+                        if bestRange == nil || range.lowerBound > bestRange!.lowerBound {
+                            bestRange = range
+                        }
+                    }
+                }
+                
+                if let bestRange = bestRange {
+                    self.isCommandModeActive = true
+                    displayText = String(text[bestRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
                 }
                 
                 self.recognizedText = displayText
                 self.currentSpeech = displayText
-                self.checkForWakeWord(text: displayText)
                 self.resetTimers()
-            }
-        }
-    }
-    
-    private func checkForWakeWord(text: String) {
-        let lowerText = text.lowercased()
-        // If we hear the wake word, we activate command mode
-        if lowerText.contains("byte") || lowerText.contains("байт") {
-            if !isCommandModeActive {
-                isCommandModeActive = true
-                // Vibrate or play sound here if needed
+            } else if let error = error {
+                print("Speech recognition error: \(error)")
             }
         }
     }
