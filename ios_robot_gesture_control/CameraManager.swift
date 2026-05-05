@@ -39,7 +39,7 @@ class CameraManager: NSObject, ObservableObject {
         super.init()
         setupCamera()
         setupHandLandmarker()
-        setupUDP(host: "192.168.1.4", port: 8080)
+        setupUDP(host: "192.168.1.100", port: 8080)
     }
     func setupHandLandmarker() {
         do {

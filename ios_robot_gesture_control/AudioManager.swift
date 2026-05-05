@@ -20,7 +20,7 @@ class RobotSoundEngine {
     private func setupAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.playback, mode: .default, options: [])
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
             try session.setActive(true)
         } catch {
             print("Audio session setup error: \(error)")
