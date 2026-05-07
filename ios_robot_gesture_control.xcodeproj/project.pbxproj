@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C86A05832FACB2A100820447 /* CoreMLLLM in Frameworks */ = {isa = PBXBuildFile; productRef = C86A05822FACB2A100820447 /* CoreMLLLM */; };
 		F16FA7F3E921B7738C829247 /* Pods_ios_robot_gesture_control.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5615D02C526B6C08DA71D158 /* Pods_ios_robot_gesture_control.framework */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +31,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C86A05832FACB2A100820447 /* CoreMLLLM in Frameworks */,
 				F16FA7F3E921B7738C829247 /* Pods_ios_robot_gesture_control.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -120,6 +122,9 @@
 			);
 			mainGroup = C80005CC2F405E6F00F989E6;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C86A05812FACB2A100820447 /* XCRemoteSwiftPackageReference "CoreML-LLM" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C80005D62F405E6F00F989E6 /* Products */;
 			projectDirPath = "";
@@ -391,6 +396,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C86A05812FACB2A100820447 /* XCRemoteSwiftPackageReference "CoreML-LLM" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/john-rocky/CoreML-LLM";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C86A05822FACB2A100820447 /* CoreMLLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C86A05812FACB2A100820447 /* XCRemoteSwiftPackageReference "CoreML-LLM" */;
+			productName = CoreMLLLM;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C80005CD2F405E6F00F989E6 /* Project object */;
 }

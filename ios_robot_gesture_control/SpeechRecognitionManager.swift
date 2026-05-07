@@ -40,6 +40,9 @@ class SpeechRecognitionManager: ObservableObject {
     private var llmTimer: Timer?
     private var restartTimer: Timer?
     
+    // LLM for emotion detection
+    let llmManager = LLMManager()
+    
     init() {
         // Authorization is requested when the view appears
     }
@@ -203,7 +206,7 @@ class SpeechRecognitionManager: ObservableObject {
     }
     
     private func sendToLLM(text: String) {
-        // Stub for sending the text to LLM (dummy)
         print("Sending to LLM: \(text)")
+        llmManager.classifyEmotion(text: text)
     }
 }
