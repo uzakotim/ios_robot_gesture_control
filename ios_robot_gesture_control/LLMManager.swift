@@ -35,8 +35,8 @@ class LLMManager: ObservableObject {
     private func setupLLM() async {
         do {
             // 2. Fallback to downloading if not bundled
-            print("Bundled model not found, falling back to download: qwen3.5-0.8b...")
-            self.llm = try await CoreMLLLM.load(repo: "qwen3.5-0.8b")
+            print("Downloading: lfm2.5-350m")
+            self.llm = try await CoreMLLLM.load(repo: "lfm2.5-350m") { print($0) }
             self.isModelLoaded = true
             print("CoreML-LLM Initialized successfully")
         } catch {
