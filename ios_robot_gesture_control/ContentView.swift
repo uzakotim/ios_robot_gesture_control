@@ -28,6 +28,12 @@ struct ContentView: View {
             // Language Toggle Button
             VStack {
                 HStack {
+                    // Emotion Emoji Display
+                    Text(speechManager.llmManager.currentEmoji)
+                        .font(.system(size: 40))
+                        .shadow(radius: 5)
+                        .transition(.scale.combined(with: .opacity))
+                        .id(speechManager.llmManager.lastEmotion) // Force animation on change
                     Spacer()
                     Button(action: {
                         if speechManager.currentLanguage == .english {
@@ -53,43 +59,43 @@ struct ContentView: View {
             VStack {
                 Spacer()
                 
-                if !speechManager.recognizedText.isEmpty || speechManager.llmManager.lastEmotion != "neutral" {
-                    VStack(spacing: 10) {
-                        // Emotion Emoji Display
-                        Text(speechManager.llmManager.currentEmoji)
-                            .font(.system(size: 80))
-                            .shadow(radius: 10)
-                            .transition(.scale.combined(with: .opacity))
-                            .id(speechManager.llmManager.lastEmotion) // Force animation on change
-                        
-                        if !speechManager.recognizedText.isEmpty {
-                            Text(speechManager.recognizedText)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(speechManager.isCommandModeActive ? .green : .white)
-                                .padding()
-                                .background(Color.black.opacity(0.6))
-                                .cornerRadius(12)
-                        }
-                    }
-                    .padding(.bottom, 20)
-                    .animation(.spring(), value: speechManager.llmManager.lastEmotion)
-                    .animation(.easeInOut, value: speechManager.isCommandModeActive)
+                HStack(spacing: 4){
                     
-                    if speechManager.llmManager.isProcessing {
-                        ProgressView("Analyzing emotion...")
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .padding()
-                            .background(Color.black.opacity(0.4))
-                            .cornerRadius(10)
-                            .padding(.bottom, 10)
-                    } else if !speechManager.llmManager.isModelLoaded {
-                        ProgressView("Loading ANE Model...")
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .padding()
-                            .background(Color.black.opacity(0.4))
-                            .cornerRadius(10)
-                            .padding(.bottom, 10)
+                    if !speechManager.recognizedText.isEmpty || speechManager.llmManager.lastEmotion != "neutral" {
+                        VStack(spacing: 10) {
+                            
+                            if speechManager.llmManager.isProcessing {
+                                ProgressView()
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .padding()
+                                    .background(Color.black.opacity(0.6))
+                                    .cornerRadius(12)
+                            } else if !speechManager.llmManager.isModelLoaded {
+                                ProgressView("Loading model...")
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .padding()
+                                    .background(Color.black.opacity(0.6))
+                                    .cornerRadius(12)
+                            }
+                            else if !speechManager.recognizedText.isEmpty {
+                                Text(speechManager.recognizedText)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(speechManager.isCommandModeActive ? .green : .white)
+                                    .padding()
+                                    .background(Color.black.opacity(0.6))
+                                    .cornerRadius(12)
+                            }
+                        }
+                        .padding(.bottom, 10)
+                        .animation(.spring(), value: speechManager.llmManager.lastEmotion)
+                        .animation(.easeInOut, value: speechManager.isCommandModeActive)
+                        
+                        
                     }
                 }
             }

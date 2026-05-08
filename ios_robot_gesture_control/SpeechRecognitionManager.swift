@@ -93,7 +93,7 @@ class SpeechRecognitionManager: ObservableObject {
             try audioEngine.start()
             DispatchQueue.main.async {
                 self.isListening = true
-                self.recognizedText = "Listening..."
+                self.recognizedText = self.currentLanguage == .english ? "Listening..." : "Слушаю..."
             }
         } catch {
             print("Audio engine failed to start: \(error)")
