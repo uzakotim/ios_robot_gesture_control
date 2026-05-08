@@ -34,15 +34,9 @@ class LLMManager: ObservableObject {
     @MainActor
     private func setupLLM() async {
         do {
-            // 1. Check if the model is bundled in the app (e.g., in a folder named "GemmaModel")
-            if let bundledPath = Bundle.main.url(forResource: "GemmaModel", withExtension: nil) {
-                print("Loading bundled model from \(bundledPath.path)...")
-                self.llm = try await CoreMLLLM.load(from: bundledPath)
-            } else {
-                // 2. Fallback to downloading if not bundled
-                print("Bundled model not found, falling back to download: gemma4-e2b...")
-                self.llm = try await CoreMLLLM.load(repo: "gemma4-e2b")
-            }
+            // 2. Fallback to downloading if not bundled
+            print("Bundled model not found, falling back to download: qwen3.5-0.8b...")
+            self.llm = try await CoreMLLLM.load(repo: "qwen3.5-0.8b")
             self.isModelLoaded = true
             print("CoreML-LLM Initialized successfully")
         } catch {
