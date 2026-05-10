@@ -18,6 +18,11 @@ enum SequenceAction {
 class CommandManager: ObservableObject {
     @Published var currentCommand: String = ""
     @Published var isPlayingSequence: Bool = false
+    @Published var isAudioFeedbackEnabled: Bool = true {
+        didSet {
+            UserDefaults.standard.set(isAudioFeedbackEnabled, forKey: "audio_feedback_enabled")
+        }
+    }
     private var sequenceTask: Task<Void, Never>?
     
     private var lastCommand: String = ""
@@ -70,10 +75,16 @@ class CommandManager: ObservableObject {
     ]
 
     init() {
-        setupUDP(host: "192.168.1.100", port: 8080)
+        let host = UserDefaults.standard.string(forKey: "robot_ip") ?? "192.168.1.100"
+        let portString = UserDefaults.standard.string(forKey: "robot_port") ?? "8080"
+        let port = UInt16(portString) ?? 8080
+        self.isAudioFeedbackEnabled = UserDefaults.standard.object(forKey: "audio_feedback_enabled") as? Bool ?? true
+        setupUDP(host: host, port: port)
     }
 
     func setupUDP(host: String, port: UInt16) {
+        udpConnection?.cancel()
+        
         udpConnection = NWConnection(
             host: NWEndpoint.Host(host),
             port: NWEndpoint.Port(rawValue: port)!,
@@ -91,7 +102,7 @@ class CommandManager: ObservableObject {
         currentCommand = command
 
         // Audio feedback
-        if Date().timeIntervalSince(lastSoundTime) >= 0.2 {
+        if isAudioFeedbackEnabled && Date().timeIntervalSince(lastSoundTime) >= 0.2 {
             playFeedbackSound(for: command)
             lastSoundTime = Date()
         }

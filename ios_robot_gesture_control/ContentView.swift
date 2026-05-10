@@ -13,6 +13,8 @@ struct ContentView: View {
     @StateObject private var commandManager: CommandManager
     @StateObject private var cameraManager: CameraManager
     @StateObject private var speechManager: SpeechRecognitionManager
+    @State private var showingSettings = false
+    
     init() {
         let cmdManager = CommandManager()
         _commandManager = StateObject(wrappedValue: cmdManager)
@@ -43,20 +45,33 @@ struct ContentView: View {
                         .id(speechManager.llmManager.lastEmotion) // Force animation on change
                     Spacer()
                     
-                    Button(action: {
-                        if speechManager.currentLanguage == .english {
-                            speechManager.currentLanguage = .russian
-                        } else {
-                            speechManager.currentLanguage = .english
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color.black.opacity(0.4))
+                                .clipShape(Circle())
                         }
-                    }) {
-                        Text(speechManager.currentLanguage.title)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.blue.opacity(0.8))
-                            .cornerRadius(20)
+                        
+                        Button(action: {
+                            if speechManager.currentLanguage == .english {
+                                speechManager.currentLanguage = .russian
+                            } else {
+                                speechManager.currentLanguage = .english
+                            }
+                        }) {
+                            Text(speechManager.currentLanguage.title)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.blue.opacity(0.8))
+                                .cornerRadius(20)
+                        }
                     }
                     .padding()
                 }
@@ -110,6 +125,9 @@ struct ContentView: View {
         }
         .onAppear {
             speechManager.requestAuthorization()
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(commandManager: commandManager)
         }
     }
 }
