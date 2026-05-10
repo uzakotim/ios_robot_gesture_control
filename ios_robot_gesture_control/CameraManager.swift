@@ -19,7 +19,6 @@ class CameraManager: NSObject, ObservableObject {
     var captureSession = AVCaptureSession()
     private var videoOutput = AVCaptureVideoDataOutput()
     
-    @Published var currentCommand: String = ""
     @Published var currentLandmarks: [CGPoint] = []
     @Published var offsetX: CGFloat = 0
     @Published var offsetY: CGFloat = 0
@@ -27,20 +26,17 @@ class CameraManager: NSObject, ObservableObject {
     private var eyeModeStabilityCounter = 0
     
     private var handLandmarker: HandLandmarker?
-    private var lastCommand: String = ""
     private var isProcessingFrame = false
 
-    private var udpConnection: NWConnection?
-    var soundEngine = RobotSoundEngine()
-    private var lastSoundTime = Date()
+    private var commandManager: CommandManager
 
-    
-    override init() {
+    init(commandManager: CommandManager) {
+        self.commandManager = commandManager
         super.init()
         setupCamera()
         setupHandLandmarker()
-        setupUDP(host: "192.168.1.100", port: 8080)
     }
+
     func setupHandLandmarker() {
         do {
             let options = HandLandmarkerOptions()
@@ -60,24 +56,15 @@ class CameraManager: NSObject, ObservableObject {
             print("Failed to create HandLandmarker: \(error)")
         }
     }
-    func setupUDP(host: String, port: UInt16) {
-        udpConnection = NWConnection(
-            host: NWEndpoint.Host(host),
-            port: NWEndpoint.Port(rawValue: port)!,
-            using: .udp
-        )
-        udpConnection?.start(queue: .global())
-    }
+
     private func handleLandmarkerResult(_ result: HandLandmarkerResult) {
 
         guard let hand = result.landmarks.first else {
             DispatchQueue.main.async { [weak self] in
-//                self?.currentLandmarks = []
-                self?.currentCommand = "k 0"
                 self?.offsetX = 0
                 self?.offsetY = 0
             }
-            sendCommandIfChanged("k 0")
+            commandManager.sendCommand("k 0")
             return
         }
 
@@ -86,15 +73,6 @@ class CameraManager: NSObject, ObservableObject {
         let isRightHand = handedness == "Right"
 
         print("Detected hand:", handedness)
-
-        // ===== Publish normalized landmarks for UI overlay (x,y in 0..1) =====
-//        let normalizedPoints: [CGPoint] = hand.map { pt in
-//            CGPoint(x: 1 - CGFloat(pt.x), y: 1 - CGFloat(pt.y))
-//        }
-        
-//        DispatchQueue.main.async { [weak self] in
-//            self?.currentLandmarks = normalizedPoints
-//        }
         
         // ===== POSITION =====
         let meanX = hand.map { $0.x }.reduce(0, +) / Float(hand.count)
@@ -217,10 +195,10 @@ class CameraManager: NSObject, ObservableObject {
             self?.offsetX = 0
             self?.offsetY = 0
         }
-//        print("Position:", position, "Orientation:", orientation)
 
         mapGestureToCommand(position: position, orientation: orientation)
     }
+
     private func mapGestureToCommand(position: String, orientation: String) {
 
         let command: String
@@ -241,44 +219,9 @@ class CameraManager: NSObject, ObservableObject {
             command = "k 0"
         }
 
-        DispatchQueue.main.async { [weak self] in
-            self?.currentCommand = command
-        }
-
-        sendCommandIfChanged(command)
+        commandManager.sendCommand(command)
     }
-    private func sendCommandIfChanged(_ command: String) {
 
-        guard command != lastCommand else { return }
-        lastCommand = command
-        if Date().timeIntervalSince(lastSoundTime) < 0.2
-        {
-            return;
-        }
-        if command.contains("w"){
-            self.soundEngine.playChirp(startFreq: 500, endFreq: 900, duration: 0.20)
-        }
-        else if command.contains("s"){
-                    self.soundEngine.playChirp(startFreq: 700, endFreq: 900, duration: 0.10)
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        self.soundEngine.playChirp(startFreq: 900, endFreq: 500, duration: 0.12)
-                    }
-        }
-        else if command.contains("q"){
-            self.soundEngine.playChirp(startFreq: 700, endFreq: 500, duration: 0.15)
-        }
-        else if command.contains("e"){
-            self.soundEngine.playChirp(startFreq: 500, endFreq: 700, duration: 0.15)
-        }
-
-        guard let data = command.data(using: .utf8) else { return }
-
-        udpConnection?.send(content: data, completion: .contentProcessed({ error in
-            if let error = error {
-                print("UDP send error: \(error)")
-            }
-        }))
-    }
     private func setupCamera() {
         captureSession.sessionPreset = .iFrame1280x720
         

@@ -10,8 +10,15 @@ import Combine
 
 struct ContentView: View {
     
-    @StateObject private var cameraManager = CameraManager()
+    @StateObject private var commandManager: CommandManager
+    @StateObject private var cameraManager: CameraManager
     @StateObject private var speechManager = SpeechRecognitionManager()
+    
+    init() {
+        let cmdManager = CommandManager()
+        _commandManager = StateObject(wrappedValue: cmdManager)
+        _cameraManager = StateObject(wrappedValue: CameraManager(commandManager: cmdManager))
+    }
     
     var body: some View {
         ZStack {
@@ -22,7 +29,7 @@ struct ContentView: View {
                 .opacity(0.7)
             
             // Robot face overlay (top)
-            RobotEyesOverlay(cameraManager: cameraManager)
+            RobotEyesOverlay(cameraManager: cameraManager, commandManager: commandManager)
                 .ignoresSafeArea()
                 
             // Language Toggle Button

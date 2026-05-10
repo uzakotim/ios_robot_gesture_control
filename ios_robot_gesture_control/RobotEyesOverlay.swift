@@ -3,6 +3,7 @@ import SwiftUI
 struct RobotEyesOverlay: View {
     
     @ObservedObject var cameraManager: CameraManager
+    @ObservedObject var commandManager: CommandManager
     
     @State private var eyeOffsetX: CGFloat = 0
     @State private var eyeOffsetY: CGFloat = 0
@@ -35,7 +36,7 @@ struct RobotEyesOverlay: View {
             }
             
             // Movement mode (robot commands)
-            .onChange(of: cameraManager.currentCommand) { _, newValue in
+            .onChange(of: commandManager.currentCommand) { _, newValue in
                 updateEyes(for: newValue)
             }
             

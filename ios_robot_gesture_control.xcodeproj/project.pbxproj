@@ -63,7 +63,6 @@
 				C80005D62F405E6F00F989E6 /* Products */,
 				3C8ADDBBA38E4E386503B2D5 /* Pods */,
 				ABF5037022E6D03A379B5A3B /* Frameworks */,
-				C856001D2FADD3A300991639 /* GemmaModel */,
 			);
 			sourceTree = "<group>";
 		};
@@ -93,7 +92,6 @@
 			);
 			fileSystemSynchronizedGroups = (
 				C80005D72F405E6F00F989E6 /* ios_robot_gesture_control */,
-				C856001D2FADD3A300991639 /* GemmaModel */,
 			);
 			name = ios_robot_gesture_control;
 			productName = ios_robot_gesture_control;
