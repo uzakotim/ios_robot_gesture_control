@@ -130,7 +130,7 @@ class CommandManager: ObservableObject {
         sequenceTask?.cancel()
         isPlayingSequence = false
         sequenceTask = nil
-        sendCommand("stop", force: true)
+        sendCommand("k 0", force: true)
     }
 
     private func playFeedbackSound(for command: String) {

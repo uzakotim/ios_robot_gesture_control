@@ -180,7 +180,7 @@ class SpeechRecognitionManager: ObservableObject {
         restartTimer?.invalidate()
         
         // 3 seconds of silence -> send to LLM and clear currentSpeech
-        llmTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
+        llmTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 if !self.currentSpeech.isEmpty && self.isCommandModeActive {
@@ -194,7 +194,7 @@ class SpeechRecognitionManager: ObservableObject {
         }
         
         // 5 seconds of silence -> restart listening
-        restartTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { [weak self] _ in
+        restartTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { [weak self] _ in
             DispatchQueue.main.async {
                 // When the pause (5 sec) is over, reset state and start listening again
                 self?.isCommandModeActive = false

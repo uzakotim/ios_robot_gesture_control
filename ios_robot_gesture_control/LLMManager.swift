@@ -81,12 +81,15 @@ class LLMManager: ObservableObject {
                 commandManager?.executeSequence(named: detectedEmotion)
             }
             
+            
             self.lastEmotion = detectedEmotion
             self.isProcessing = false
+            commandManager?.sendCommand("k 0")
             print("Detected Emotion: \(detectedEmotion)")
         } catch {
             print("Inference failed: \(error)")
             self.isProcessing = false
+            commandManager?.sendCommand("k 0")
         }
     }
 }
