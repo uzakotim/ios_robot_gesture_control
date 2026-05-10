@@ -78,6 +78,44 @@ struct ContentView: View {
                 Spacer()
             }
                 
+//            // Test Sequence Buttons
+//            VStack {
+//                Spacer()
+//                ScrollView(.horizontal, showsIndicators: false) {
+//                    HStack(spacing: 12) {
+//                        ForEach(["happiness", "sadness", "anger", "fear", "disgust", "surprise"], id: \.self) { emotion in
+//                            Button(action: {
+//                                commandManager.executeSequence(named: emotion)
+//                            }) {
+//                                HStack(spacing: 8) {
+//                                    Text(emoji(for: emotion))
+//                                        .font(.title3)
+//                                    Text(emotion.capitalized)
+//                                        .font(.system(size: 14, weight: .bold, design: .rounded))
+//                                }
+//                                .padding(.horizontal, 16)
+//                                .padding(.vertical, 10)
+//                                .background(
+//                                    VisualEffectBlur(blurStyle: .systemUltraThinMaterialDark)
+//                                        .cornerRadius(20)
+//                                )
+//                                .foregroundColor(.white)
+//                                .overlay(
+//                                    RoundedRectangle(cornerRadius: 20)
+//                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+//                                )
+//                                .shadow(color: Color.black.opacity(0.3), radius: 5, x: 0, y: 3)
+//                                .opacity(commandManager.isPlayingSequence ? 0.5 : 1.0)
+//                            }
+//                            .buttonStyle(PlainButtonStyle())
+//                            .disabled(commandManager.isPlayingSequence)
+//                        }
+//                    }
+//                    .padding(.horizontal, 20)
+//                    .padding(.bottom, 150)
+//                }
+//            }
+//            
             // Speech Recognition Overlay
             VStack {
                 Spacer()
@@ -129,5 +167,28 @@ struct ContentView: View {
         .sheet(isPresented: $showingSettings) {
             SettingsView(commandManager: commandManager)
         }
+    }
+    
+    private func emoji(for emotion: String) -> String {
+        switch emotion {
+        case "happiness": return "😊"
+        case "sadness": return "😢"
+        case "anger": return "😠"
+        case "fear": return "😨"
+        case "disgust": return "🤢"
+        case "surprise": return "😲"
+        default: return "🤔"
+        }
+    }
+}
+
+// Helper for Blur Effect
+struct VisualEffectBlur: UIViewRepresentable {
+    var blurStyle: UIBlurEffect.Style
+    func makeUIView(context: Context) -> UIVisualEffectView {
+        UIVisualEffectView(effect: UIBlurEffect(style: blurStyle))
+    }
+    func updateUIView(_ uiView: UIVisualEffectView, context: Context) {
+        uiView.effect = UIBlurEffect(style: blurStyle)
     }
 }
