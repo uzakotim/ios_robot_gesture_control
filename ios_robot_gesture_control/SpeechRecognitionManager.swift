@@ -43,8 +43,8 @@ class SpeechRecognitionManager: ObservableObject {
     // LLM for emotion detection
     let llmManager = LLMManager()
     
-    init() {
-        // Authorization is requested when the view appears
+    init(commandManager: CommandManager? = nil) {
+        self.llmManager.commandManager = commandManager
     }
     
     func requestAuthorization() {

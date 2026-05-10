@@ -12,12 +12,12 @@ struct ContentView: View {
     
     @StateObject private var commandManager: CommandManager
     @StateObject private var cameraManager: CameraManager
-    @StateObject private var speechManager = SpeechRecognitionManager()
-    
+    @StateObject private var speechManager: SpeechRecognitionManager
     init() {
         let cmdManager = CommandManager()
         _commandManager = StateObject(wrappedValue: cmdManager)
         _cameraManager = StateObject(wrappedValue: CameraManager(commandManager: cmdManager))
+        _speechManager = StateObject(wrappedValue: SpeechRecognitionManager(commandManager: cmdManager))
     }
     
     var body: some View {
@@ -42,6 +42,7 @@ struct ContentView: View {
                         .transition(.scale.combined(with: .opacity))
                         .id(speechManager.llmManager.lastEmotion) // Force animation on change
                     Spacer()
+                    
                     Button(action: {
                         if speechManager.currentLanguage == .english {
                             speechManager.currentLanguage = .russian

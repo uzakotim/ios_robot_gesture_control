@@ -10,6 +10,8 @@ class LLMManager: ObservableObject {
     @Published var isProcessing: Bool = false
     @Published var isModelLoaded: Bool = false
     
+    var commandManager: CommandManager?
+    
     // Emotion to Emoji mapping
     private let emotionEmojis: [String: String] = [
         "happiness": "😊",
@@ -74,6 +76,10 @@ class LLMManager: ObservableObject {
             
             // Find if any of our keys is in the result
             let detectedEmotion = self.emotionEmojis.keys.first { cleanedResult.contains($0) } ?? "neutral"
+            
+            if detectedEmotion != "neutral" {
+                commandManager?.executeSequence(named: detectedEmotion)
+            }
             
             self.lastEmotion = detectedEmotion
             self.isProcessing = false
