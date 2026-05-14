@@ -5,6 +5,9 @@ struct RobotEyesOverlay: View {
     @ObservedObject var cameraManager: CameraManager
     @ObservedObject var commandManager: CommandManager
     
+    var eyeColor: Color = .yellow
+    var onEyesTapped: () -> Void = {}
+    
     @State private var eyeOffsetX: CGFloat = 0
     @State private var eyeOffsetY: CGFloat = 0
     @State private var eyeSize: CGFloat = 200
@@ -23,14 +26,22 @@ struct RobotEyesOverlay: View {
                     RobotEye(
                         offsetX: eyeOffsetX,
                         offsetY: eyeOffsetY,
-                        eyeSize: eyeSize
+                        eyeSize: eyeSize,
+                        color: eyeColor
                     )
+                    .onTapGesture {
+                        onEyesTapped()
+                    }
                     
                     RobotEye(
                         offsetX: eyeOffsetX,
                         offsetY: eyeOffsetY,
-                        eyeSize: eyeSize
+                        eyeSize: eyeSize,
+                        color: eyeColor
                     )
+                    .onTapGesture {
+                        onEyesTapped()
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }

@@ -15,6 +15,10 @@ struct ContentView: View {
     @StateObject private var speechManager: SpeechRecognitionManager
     @State private var showingSettings = false
     
+    @State private var showingColorPalette = false
+    @State private var robotEyeColor: Color = .yellow
+    let eyeColors: [Color] = [.red, .orange, .yellow, .green, .cyan, .blue, .indigo]
+    
     init() {
         let cmdManager = CommandManager()
         _commandManager = StateObject(wrappedValue: cmdManager)
@@ -31,8 +35,51 @@ struct ContentView: View {
                 .opacity(0.7)
             
             // Robot face overlay (top)
-            RobotEyesOverlay(cameraManager: cameraManager, commandManager: commandManager)
-                .ignoresSafeArea()
+            RobotEyesOverlay(cameraManager: cameraManager, commandManager: commandManager, eyeColor: robotEyeColor) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showingColorPalette = true
+                }
+            }
+            .ignoresSafeArea()
+            
+            // Color Palette Layer
+            if showingColorPalette {
+                Color.black.opacity(0.01) // Catch taps elsewhere
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            showingColorPalette = false
+                        }
+                    }
+                
+                VStack {
+                    Spacer()
+                    HStack(spacing: 15) {
+                        ForEach(eyeColors, id: \.self) { color in
+                            Circle()
+                                .fill(color)
+                                .frame(width: 60, height: 60)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: robotEyeColor == color ? 3 : 0)
+                                )
+                                .shadow(color: color.opacity(0.8), radius: robotEyeColor == color ? 8 : 4)
+                                .scaleEffect(robotEyeColor == color ? 1.1 : 1.0)
+                                .onTapGesture {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        robotEyeColor = color
+                                    }
+                                }
+                        }
+                    }
+                    .padding(20)
+                    .background(Color.black.opacity(0.6))
+                    .cornerRadius(25)
+                    .padding(.bottom, 120)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(10)
+            }
                 
             // Language Toggle Button
             VStack {

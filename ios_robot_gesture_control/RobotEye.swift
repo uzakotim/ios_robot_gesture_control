@@ -11,22 +11,22 @@ struct RobotEye: View {
     var offsetX: CGFloat
     var offsetY: CGFloat
     var eyeSize: CGFloat
+    var color: Color = .yellow
     
     var body: some View {
         
         RoundedRectangle(cornerRadius:50)
-            .fill(
+            .fill(color)
+            .overlay(
                 LinearGradient(
-                    colors: [
-                        Color(red: 1.0, green: 0.9, blue: 0.1),
-                        Color.yellow
-                    ],
+                    colors: [.white.opacity(0.2), .clear],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
+            .clipShape(RoundedRectangle(cornerRadius: 50))
             .frame(width: eyeSize, height: eyeSize)
             .offset(x: offsetX, y: offsetY)
-            .shadow(color: .yellow.opacity(0.6), radius: 12)
+            .shadow(color: color.opacity(0.6), radius: 12)
     }
 }
