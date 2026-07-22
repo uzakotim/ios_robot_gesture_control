@@ -204,10 +204,10 @@ class CameraManager: NSObject, ObservableObject {
         let command: String
 
         if position == "LEFT" {
-            command = "e 170"
+            command = "e 220"
         }
         else if position == "RIGHT" {
-            command = "q 170"
+            command = "q 220"
         }
         else if position == "MIDDLE" && orientation == "PALM" {
             command = "s 150"
@@ -254,12 +254,12 @@ class CameraManager: NSObject, ObservableObject {
             if let connection = videoOutput.connection(with: .video) {
                 if #available(iOS 17.0, *) {
                     // 90 degrees corresponds to landscapeRight rotation
-                    if connection.isVideoRotationAngleSupported(0) {
-                        connection.videoRotationAngle = 0
+                    if connection.isVideoRotationAngleSupported(270) {
+                        connection.videoRotationAngle = 270
                     }
                 } else {
                     if connection.isVideoOrientationSupported {
-                        connection.videoOrientation = .landscapeRight
+                        connection.videoOrientation = .landscapeLeft
                     }
                 }
                 
