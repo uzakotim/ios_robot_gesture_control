@@ -1,0 +1,1 @@
+add Models folder into Copy Bundle Resources (Target->Build phases)
