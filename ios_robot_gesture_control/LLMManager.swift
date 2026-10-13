@@ -1,10 +1,10 @@
 import Foundation
-import CoreMLLLM
 import SwiftUI
 import Combine
+import LLM
 
 class LLMManager: ObservableObject {
-    private var llm: CoreMLLLM?
+    private var llm : LLM?
     
     @Published var lastEmotion: String = "neutral"
     @Published var isProcessing: Bool = false
@@ -36,16 +36,21 @@ class LLMManager: ObservableObject {
     @MainActor
     private func setupLLM() async {
         do {
-            // 2. Fallback to downloading if not bundled
-            print("Downloading: lfm2.5-350m")
-            self.llm = try await CoreMLLLM.load(repo: "lfm2.5-350m") { print($0) }
+            guard let modelURL = Bundle.main.url(
+                       forResource: "gemma-2-2b-it-Q4_K_M",
+                       withExtension: "gguf"
+                   ) else {
+                       print("Модель не найдена в Bundle!")
+                       return
+                   }
+            
+            self.llm = LLM(from: modelURL, template: .gemma,maxTokenCount: 32000)
             self.isModelLoaded = true
-            print("CoreML-LLM Initialized successfully")
-        } catch {
-            print("Failed to initialize CoreML-LLM: \(error)")
+            print("LLM Initialized successfully")
+            
         }
     }
-
+    
     
     func classifyEmotion(text: String) {
         Task {
@@ -53,43 +58,95 @@ class LLMManager: ObservableObject {
         }
     }
     
+    
     @MainActor
-    private func performClassification(text: String) async {
-        guard let llm = llm else {
-            print("LLM not initialized")
+    private func makeLLM() -> LLM? {
+        guard let modelURL = Bundle.main.url(
+            forResource: "gemma-2-2b-it-Q4_K_M",
+            withExtension: "gguf"
+        ) else {
+            return nil
+        }
+
+        return LLM(
+            from: modelURL,
+            template: .chatML(
+                "You are a happy robot that responds with emotions"
+            ),
+            maxTokenCount: 2048
+        )
+    }
+    
+    @MainActor
+    func performClassification(text: String) async {
+        // Prevent overlapping inference requests.
+        guard !isProcessing else {
+            print("Classification already in progress; skipping request.")
+            return
+        }
+
+        guard let llm = self.llm else {
+            print("LLM is not initialized")
+            return
+        }
+
+        isProcessing = true
+        defer {
+            isProcessing = false
+        }
+
+        guard let freshLLM = makeLLM() else {
+            print("Could not initialize LLM")
             return
         }
         
-        self.isProcessing = true
-        
+
         let prompt = """
-        Classify the following text into exactly one of these six emotions: happiness, sadness, anger, fear, disgust, surprise.
-        Return ONLY the emotion word.
+        Classify this text into exactly one emotion:
+        happiness, sadness, anger, fear, disgust, surprise.
+
         
         Text: "\(text)"
-        Emotion:
-        """
         
-        do {
-            let result = try await llm.generate(prompt)
-            let cleanedResult = result.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            
-            // Find if any of our keys is in the result
-            let detectedEmotion = self.emotionEmojis.keys.first { cleanedResult.contains($0) } ?? "neutral"
-            
-            if detectedEmotion != "neutral" {
-                commandManager?.executeSequence(named: detectedEmotion)
-            }
-            
-            
-            self.lastEmotion = detectedEmotion
-            self.isProcessing = false
-            commandManager?.sendCommand("k 0")
-            print("Detected Emotion: \(detectedEmotion)")
-        } catch {
-            print("Inference failed: \(error)")
-            self.isProcessing = false
-            commandManager?.sendCommand("k 0")
+        Return ONLY the emotion word, NO COMMENTS, NO EXPLANATION
+        """
+
+        await freshLLM.respond(to: prompt)
+
+        let result = freshLLM.output
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        print("Raw LLM output: \(result)")
+        
+        let emotions = [
+            "happiness", "sadness", "anger",
+            "fear", "disgust", "surprise"
+        ]
+
+        let cleanedResult = result
+            .replacingOccurrences(of: "&#x20;", with: " ")
+            .replacingOccurrences(of: "<|im_end|>", with: "")
+            .replacingOccurrences(of: "<|endoftext|>", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        let detectedEmotion = emotions.first { emotion in
+            cleanedResult
+                .components(separatedBy: CharacterSet.alphanumerics.inverted)
+                .contains(emotion)
+        } ?? "neutral"
+
+        print("Detected Emotion: \(detectedEmotion)")
+
+        lastEmotion = detectedEmotion
+
+        if detectedEmotion != "neutral" {
+            commandManager?.executeSequence(named: detectedEmotion)
         }
+
+        commandManager?.sendCommand("k 0")
+
+        print("Detected Emotion: \(detectedEmotion)")
     }
 }

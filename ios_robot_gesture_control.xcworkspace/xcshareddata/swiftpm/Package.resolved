@@ -1,5 +1,5 @@
 {
-  "originHash" : "ed4205e0c1ac6cf21b7a13cbb0c06e7d2fd2a2c35b49b5511f4d38ce116303a4",
+  "originHash" : "7c6dfcc55770d3972b814ea0a12a58caf0ab45f9e6f0a9d2b143d9ace36b8d92",
   "pins" : [
     {
       "identity" : "coreml-llm",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "86b5096ac59ab46e66bd1f6377c604bc1dab0bc2",
         "version" : "1.5.1"
+      }
+    },
+    {
+      "identity" : "llm.swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/eastriverlee/LLM.swift",
+      "state" : {
+        "revision" : "4b2517839f24498bea0695bae8967b359b9a35c4",
+        "version" : "1.8.0"
       }
     },
     {
