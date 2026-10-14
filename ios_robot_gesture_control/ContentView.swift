@@ -171,32 +171,9 @@ struct ContentView: View {
                     
                     if !speechManager.recognizedText.isEmpty || speechManager.llmManager.lastEmotion != "neutral" {
                         VStack(spacing: 10) {
-                            
-                            if speechManager.llmManager.isProcessing {
-                                ProgressView()
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .padding()
-                                    .background(Color.black.opacity(0.6))
-                                    .cornerRadius(12)
-                            } else if !speechManager.llmManager.isModelLoaded {
-                                ProgressView("Loading model...")
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .padding()
-                                    .background(Color.black.opacity(0.6))
-                                    .cornerRadius(12)
-                            }
-                            else if !speechManager.recognizedText.isEmpty {
-                                Text(speechManager.recognizedText)
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(speechManager.isCommandModeActive ? .green : .white)
-                                    .padding()
-                                    .background(Color.black.opacity(0.6))
-                                    .cornerRadius(12)
+                            if speechManager.isListening {
+                                Image(systemName: "mic")
+                                     .foregroundColor(speechManager.isCommandModeActive ? .green : .orange)
                             }
                         }
                         .padding(.bottom, 10)
