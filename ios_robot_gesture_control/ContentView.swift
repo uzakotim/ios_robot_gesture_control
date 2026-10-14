@@ -115,10 +115,13 @@ struct ContentView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.8))
-                                .cornerRadius(20)
+                                .padding(.vertical,8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .strokeBorder(robotEyeColor, lineWidth: 2)
+                                )
                         }
+
                     }
                     .padding()
                 }
@@ -190,7 +193,7 @@ struct ContentView: View {
             ZStack {
                 Rectangle()
                     .fill(
-                        LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        LinearGradient(colors: [robotEyeColor, robotEyeColor.opacity(0.85)], startPoint: .topLeading, endPoint: .bottomTrailing)
                     )
                     .blur(radius: 40)
                 Rectangle()
