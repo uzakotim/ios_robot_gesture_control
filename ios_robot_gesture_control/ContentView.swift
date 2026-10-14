@@ -185,6 +185,24 @@ struct ContentView: View {
                 }
             }
         }
+        .background(
+            // Speech background glowing effect
+            ZStack {
+                Rectangle()
+                    .fill(
+                        LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .blur(radius: 40)
+                Rectangle()
+                    .fill(Color.black)
+                    .padding(40)
+                    .blur(radius: 40)
+                    .blendMode(.destinationOut)
+            }
+            .compositingGroup()
+            .ignoresSafeArea()
+            .opacity(speechManager.isCommandModeActive ? 1 : 0)
+        )
         .onAppear {
             speechManager.requestAuthorization()
         }
