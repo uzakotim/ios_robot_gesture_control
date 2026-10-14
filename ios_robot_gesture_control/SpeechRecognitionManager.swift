@@ -79,7 +79,7 @@ class SpeechRecognitionManager: ObservableObject {
         activeRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let request = activeRequest else { return }
         request.shouldReportPartialResults = true
-        request.contextualStrings = ["Byte", "Байт", "Ayte","Айт"]
+        request.contextualStrings = ["buy","bai","bye","ay","byte","ayte","ay","ite","hey buy", "hey byte","hey ay","hey bye","бай", "байт", "айт","хей бай","хей байт","хей айт"]
         
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
@@ -150,7 +150,7 @@ class SpeechRecognitionManager: ObservableObject {
                 var displayText = text
                 
                 // Erase previous words from the display by taking the LAST occurrence of any wake word
-                let wakeWords = ["byte","бай", "байт","ayte","ay","ite", "айт"]
+                let wakeWords = ["buy","bai","bye","ay","byte","ayte","ay","ite","hey buy", "hey byte","hey ay","hey bye","бай", "байт", "айт","хей бай","хей байт","хей айт"]
                 var bestRange: Range<String.Index>? = nil
                 
                 for word in wakeWords {
@@ -179,8 +179,8 @@ class SpeechRecognitionManager: ObservableObject {
         llmTimer?.invalidate()
         restartTimer?.invalidate()
         
-        // 1.5 seconds of silence -> send to LLM and clear currentSpeech
-        llmTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { [weak self] _ in
+        // 1 seconds of silence -> send to LLM and clear currentSpeech
+        llmTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [weak self] _ in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 if !self.currentSpeech.isEmpty && self.isCommandModeActive {
@@ -193,8 +193,8 @@ class SpeechRecognitionManager: ObservableObject {
             }
         }
         
-        // 2 seconds of silence -> restart listening
-        restartTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+        // 4 seconds of silence -> restart listening
+        restartTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: false) { [weak self] _ in
             DispatchQueue.main.async {
                 // When the pause (2 sec) is over, reset state and start listening again
                 self?.isCommandModeActive = false
