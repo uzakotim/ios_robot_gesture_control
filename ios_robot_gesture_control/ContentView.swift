@@ -14,6 +14,7 @@ struct ContentView: View {
     @StateObject private var cameraManager: CameraManager
     @StateObject private var speechManager: SpeechRecognitionManager
     @State private var showingSettings = false
+    let DEBUG: Bool = false
     
     @State private var showingColorPalette = false
     @State private var robotEyeColor: Color = .yellow
@@ -35,7 +36,12 @@ struct ContentView: View {
                 .opacity(0.7)
             
             // Robot face overlay (top)
-            RobotEyesOverlay(cameraManager: cameraManager, commandManager: commandManager, eyeColor: robotEyeColor) {
+            RobotEyesOverlay(
+                cameraManager: cameraManager,
+                commandManager: commandManager,
+                emotion: speechManager.llmManager.lastEmotion,
+                eyeColor: robotEyeColor
+            ) {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     showingColorPalette = true
                 }
@@ -84,12 +90,16 @@ struct ContentView: View {
             // Language Toggle Button
             VStack {
                 HStack {
-                    // Emotion Emoji Display
-                    Text(speechManager.llmManager.currentEmoji)
-                        .font(.system(size: 40))
-                        .shadow(radius: 5)
-                        .transition(.scale.combined(with: .opacity))
-                        .id(speechManager.llmManager.lastEmotion) // Force animation on change
+                  
+                    if DEBUG {
+                        // DEBUG: Emotion Emoji Display
+                        Text(speechManager.llmManager.currentEmoji)
+                            .font(.system(size: 40))
+                            .shadow(radius: 5)
+                            .transition(.scale.combined(with: .opacity))
+                            .id(speechManager.llmManager.lastEmotion) // Force animation on change
+                    }
+                    
                     Spacer()
                     
                     HStack(spacing: 12) {
@@ -127,45 +137,8 @@ struct ContentView: View {
                 }
                 Spacer()
             }
-                
-//            // Test Sequence Buttons
-//            VStack {
-//                Spacer()
-//                ScrollView(.horizontal, showsIndicators: false) {
-//                    HStack(spacing: 12) {
-//                        ForEach(["happiness", "sadness", "anger", "fear", "disgust", "surprise"], id: \.self) { emotion in
-//                            Button(action: {
-//                                commandManager.executeSequence(named: emotion)
-//                            }) {
-//                                HStack(spacing: 8) {
-//                                    Text(emoji(for: emotion))
-//                                        .font(.title3)
-//                                    Text(emotion.capitalized)
-//                                        .font(.system(size: 14, weight: .bold, design: .rounded))
-//                                }
-//                                .padding(.horizontal, 16)
-//                                .padding(.vertical, 10)
-//                                .background(
-//                                    VisualEffectBlur(blurStyle: .systemUltraThinMaterialDark)
-//                                        .cornerRadius(20)
-//                                )
-//                                .foregroundColor(.white)
-//                                .overlay(
-//                                    RoundedRectangle(cornerRadius: 20)
-//                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-//                                )
-//                                .shadow(color: Color.black.opacity(0.3), radius: 5, x: 0, y: 3)
-//                                .opacity(commandManager.isPlayingSequence ? 0.5 : 1.0)
-//                            }
-//                            .buttonStyle(PlainButtonStyle())
-//                            .disabled(commandManager.isPlayingSequence)
-//                        }
-//                    }
-//                    .padding(.horizontal, 20)
-//                    .padding(.bottom, 150)
-//                }
-//            }
-//            
+            
+            
             // Speech Recognition Overlay
             VStack {
                 Spacer()
