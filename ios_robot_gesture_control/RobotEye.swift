@@ -31,20 +31,21 @@ struct RobotEye: View {
 
     var body: some View {
         Group {
-            if expression.form == .happy {
-                // Pupil-free ^ shape, drawn with a rounded stroke.
-                EyeSilhouette(form: .happy)
+            // Add .disgusted (and any other line-art forms) here so they use .stroke!
+            if expression.form == .angry || expression.form == .disgusted || expression.form == .happy || expression.form == .sad {
+                EyeSilhouette(form: expression.form, side: side)
                     .stroke(color, style: StrokeStyle(lineWidth: max(9, eyeSize * 0.105), lineCap: .round, lineJoin: .round))
                     .padding(.horizontal, eyeSize * 0.08)
                     .padding(.vertical, eyeSize * 0.16)
             } else {
-                EyeSilhouette(form: expression.form)
+                // Everything else uses .fill
+                EyeSilhouette(form: expression.form, side: side)
                     .fill(LinearGradient(colors: [color.opacity(0.9), color, color.opacity(0.65)], startPoint: .topLeading, endPoint: .bottomTrailing))
                     .overlay(alignment: .top) {
                         if expression.eyelid > 0 {
                             Rectangle().fill(Color.black.opacity(0.72))
                                 .frame(height: eyeSize * expression.eyelid)
-                                .clipShape(EyeSilhouette(form: expression.form))
+                                .clipShape(EyeSilhouette(form: expression.form, side: side))
                         }
                     }
             }
@@ -60,6 +61,7 @@ struct RobotEye: View {
 
 private struct EyeSilhouette: Shape {
     var form: EyeForm
+    var side: RobotEye.Side
 
     func path(in rect: CGRect) -> Path {
         let w = rect.width, h = rect.height
@@ -68,27 +70,46 @@ private struct EyeSilhouette: Shape {
         case .neutral:
             p.addRoundedRect(in: rect, cornerSize: CGSize(width: min(w * 0.28, h * 0.28), height: min(w * 0.28, h * 0.28)))
         case .happy:
-            p.move(to: CGPoint(x: w * 0.08, y: h * 0.82))
-            p.addQuadCurve(to: CGPoint(x: w * 0.5, y: h * 0.2), control: CGPoint(x: w * 0.28, y: h * 0.2))
-            p.addQuadCurve(to: CGPoint(x: w * 0.92, y: h * 0.82), control: CGPoint(x: w * 0.72, y: h * 0.2))
+            p.move(to: CGPoint(x: w * 0, y: h * 1))
+            p.addLine(to: CGPoint(x: w * 0.50, y: h * 0.0))
+            p.addLine(to: CGPoint(x: w * 1.0, y: h * 1.0))
+        case .disgusted:
+            if side == .left {
+                // Left eye: Sharp > shape spanning full width and height
+                p.move(to: CGPoint(x: w * 0.0, y: h * 0.0))
+                p.addLine(to: CGPoint(x: w * 1.0, y: h * 0.50))
+                p.addLine(to: CGPoint(x: w * 0.0, y: h * 1.0))
+            } else {
+                // Right eye: Flat underscore _ shape spanning full width
+                p.move(to: CGPoint(x: w * 0.0, y: h ))
+                p.addLine(to: CGPoint(x: w * 1.0, y: h))
+            }
         case .angry:
-            p.move(to: CGPoint(x: w * 0.04, y: h * 0.18))
-            p.addLine(to: CGPoint(x: w * 0.96, y: h * 0.38))
-            p.addQuadCurve(to: CGPoint(x: w * 0.78, y: h * 0.84), control: CGPoint(x: w * 0.98, y: h * 0.78))
-            p.addLine(to: CGPoint(x: w * 0.18, y: h * 0.78)); p.closeSubpath()
+            // Example of different shapes for left vs right eye during angry/custom states!
+            if side == .left {
+                    // Left eye: > shape pointing right/inward, scaled to full box
+                    p.move(to: CGPoint(x: w * 0.0, y: 0))
+                    p.addLine(to: CGPoint(x: w * 1.0, y: h * 0.50))
+                    p.addLine(to: CGPoint(x: w * 0.0, y: h * 1.0))
+                } else {
+                    // Right eye: < shape pointing left/inward, scaled to full box
+                    p.move(to: CGPoint(x: w * 1.0, y: 0 ))
+                    p.addLine(to: CGPoint(x: w * 0.0, y: h * 0.50))
+                    p.addLine(to: CGPoint(x: w * 1.0, y: h * 1.0))
+                }
         case .sad:
-            p.move(to: CGPoint(x: w * 0.08, y: h * 0.3))
-            p.addQuadCurve(to: CGPoint(x: w * 0.92, y: h * 0.3), control: CGPoint(x: w * 0.5, y: h * 0.92))
-            p.addLine(to: CGPoint(x: w * 0.82, y: h * 0.76))
-            p.addQuadCurve(to: CGPoint(x: w * 0.18, y: h * 0.76), control: CGPoint(x: w * 0.5, y: h * 0.48)); p.closeSubpath()
+            if side == .left {
+                // Left eye: spans full height from bottom-left to top-right ( / )
+                p.move(to: CGPoint(x: w * 0.15, y: h * 1.0))
+                p.addLine(to: CGPoint(x: w * 0.85, y: h * 0.0))
+            } else {
+                // Right eye: spans full height from top-left to bottom-right ( \ )
+                p.move(to: CGPoint(x: w * 0.15, y: h * 0.0))
+                p.addLine(to: CGPoint(x: w * 0.85, y: h * 1.0))
+            }
         case .fearful, .surprised:
             let inset: CGFloat = form == .surprised ? 0.07 : 0.13
             p.addEllipse(in: rect.insetBy(dx: w * inset, dy: h * inset))
-        case .disgusted:
-            p.move(to: CGPoint(x: w * 0.08, y: h * 0.22))
-            p.addQuadCurve(to: CGPoint(x: w * 0.92, y: h * 0.35), control: CGPoint(x: w * 0.48, y: h * 0.02))
-            p.addLine(to: CGPoint(x: w * 0.82, y: h * 0.7))
-            p.addQuadCurve(to: CGPoint(x: w * 0.12, y: h * 0.76), control: CGPoint(x: w * 0.45, y: h * 0.58)); p.closeSubpath()
         }
         return p
     }
