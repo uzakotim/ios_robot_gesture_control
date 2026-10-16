@@ -31,7 +31,8 @@ class SpeechRecognitionManager: ObservableObject {
     
     private var engRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
     private var rusRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ru-RU"))
-    
+
+
     private var activeRequest: SFSpeechAudioBufferRecognitionRequest?
     private var activeTask: SFSpeechRecognitionTask?
     private var currentTaskID: UUID?
@@ -77,6 +78,7 @@ class SpeechRecognitionManager: ObservableObject {
         }
         
         activeRequest = SFSpeechAudioBufferRecognitionRequest()
+//        activeRequest?.requiresOnDeviceRecognition = true
         guard let request = activeRequest else { return }
         request.shouldReportPartialResults = true
         request.contextualStrings = ["buy","bai","bye","ay","byte","ayte","ay","ite","hey buy", "hey byte","hey ay","hey bye","бай", "байт", "айт","хей бай","хей байт","хей айт"]
