@@ -12,7 +12,8 @@ xcuserdata/
 
 
 *.gguf
-
+*.bin
+*.mlmodelc
 ## App packaging
 *.ipa
 *.dSYM.zip

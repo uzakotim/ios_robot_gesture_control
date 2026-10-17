@@ -46,6 +46,10 @@ class SpeechRecognitionManager: ObservableObject {
     
     init(commandManager: CommandManager? = nil) {
         self.llmManager.commandManager = commandManager
+        if ((self.rusRecognizer?.isAvailable) != nil) {
+            // Check if on-device recognition is supported for this locale
+            print(self.rusRecognizer?.supportsOnDeviceRecognition == true ? "Supports RUSSIAN" : "Does not support RUSSIAN")
+        }
     }
     
     func requestAuthorization() {
@@ -78,6 +82,7 @@ class SpeechRecognitionManager: ObservableObject {
         }
         
         activeRequest = SFSpeechAudioBufferRecognitionRequest()
+        activeRequest?.requiresOnDeviceRecognition = true
 //        activeRequest?.requiresOnDeviceRecognition = true
         guard let request = activeRequest else { return }
         request.shouldReportPartialResults = true

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C80FBF0A30825C4400184B3C /* SwiftWhisper in Frameworks */ = {isa = PBXBuildFile; productRef = C80FBF0930825C4400184B3C /* SwiftWhisper */; };
 		C82DAC66307E48C000F89402 /* LLM in Frameworks */ = {isa = PBXBuildFile; productRef = C82DAC65307E48C000F89402 /* LLM */; };
 		C86A05832FACB2A100820447 /* CoreMLLLM in Frameworks */ = {isa = PBXBuildFile; productRef = C86A05822FACB2A100820447 /* CoreMLLLM */; };
 		F16FA7F3E921B7738C829247 /* Pods_ios_robot_gesture_control.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5615D02C526B6C08DA71D158 /* Pods_ios_robot_gesture_control.framework */; };
@@ -35,6 +36,7 @@
 				C82DAC66307E48C000F89402 /* LLM in Frameworks */,
 				C86A05832FACB2A100820447 /* CoreMLLLM in Frameworks */,
 				F16FA7F3E921B7738C829247 /* Pods_ios_robot_gesture_control.framework in Frameworks */,
+				C80FBF0A30825C4400184B3C /* SwiftWhisper in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -98,6 +100,7 @@
 			name = ios_robot_gesture_control;
 			packageProductDependencies = (
 				C82DAC65307E48C000F89402 /* LLM */,
+				C80FBF0930825C4400184B3C /* SwiftWhisper */,
 			);
 			productName = ios_robot_gesture_control;
 			productReference = C80005D52F405E6F00F989E6 /* ios_robot_gesture_control.app */;
@@ -130,6 +133,7 @@
 			packageReferences = (
 				C86A05812FACB2A100820447 /* XCRemoteSwiftPackageReference "CoreML-LLM" */,
 				C82DAC64307E48C000F89402 /* XCRemoteSwiftPackageReference "LLM" */,
+				C80FBF0830825C4400184B3C /* XCRemoteSwiftPackageReference "SwiftWhisper" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C80005D62F405E6F00F989E6 /* Products */;
@@ -404,6 +408,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		C80FBF0830825C4400184B3C /* XCRemoteSwiftPackageReference "SwiftWhisper" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/exPHAT/SwiftWhisper";
+			requirement = {
+				kind = exactVersion;
+				version = 1.2.0;
+			};
+		};
 		C82DAC64307E48C000F89402 /* XCRemoteSwiftPackageReference "LLM" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/eastriverlee/LLM.swift";
@@ -423,6 +435,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		C80FBF0930825C4400184B3C /* SwiftWhisper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C80FBF0830825C4400184B3C /* XCRemoteSwiftPackageReference "SwiftWhisper" */;
+			productName = SwiftWhisper;
+		};
 		C82DAC65307E48C000F89402 /* LLM */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C82DAC64307E48C000F89402 /* XCRemoteSwiftPackageReference "LLM" */;
